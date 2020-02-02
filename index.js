@@ -80,7 +80,7 @@ var server = http.createServer(function(request, response) {
 			response.end();
 		}
 	}
-).listen($PORT);
+).listen(process.env.PORT || 8888);
 console.log("Server started.");
 
 var games = require("./games");
