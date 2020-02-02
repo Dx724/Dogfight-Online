@@ -1,0 +1,25 @@
+{
+  "name": "dogfight-online",
+  "version": "1.0.0",
+  "description": "Space shoot game",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dx724/Dogfight-Online.git"
+  },
+  "author": "David Xu",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/Dx724/Dogfight-Online/issues"
+  },
+  "homepage": "https://github.com/Dx724/Dogfight-Online#readme",
+  "dependencies": {
+    "socket.io": "^2.3.0"
+  },
+  "engines": {
+    "node": "12.x"
+  }
+}
