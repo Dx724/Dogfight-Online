@@ -461,7 +461,7 @@ exports.winterGame = () => ({
 		}
 	},
 	draw: function() {
-		var canvas = draw_getFilledCanvas(0);
+		var canvas = [0, 0, 0, 0, 0];
 		canvas[0] = this.GAME_ID;
 		canvas[1] = [];
 		for (var padObj of this.paddles) {

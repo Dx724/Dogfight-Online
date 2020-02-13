@@ -123,7 +123,7 @@
 		}
 		
 		socket.on("colorizeDisplay", function(data) { //Data should be an array of 32 arrays, each containing 32 strings.
-			console.log(data);
+			//console.log(data);
 			if (data[0] == 150000015) { //WinterGame
 					ctx.clearRect(0, 0, 1000, 1000);
 					ctx.fillStyle = "black";
