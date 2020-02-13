@@ -385,38 +385,38 @@ exports.pong = () => ({
 	maxPlayers: 2
 });
 
+const DISPLAY_SIZE = [1000, 1000];
+
 exports.winterGame = () => ({
 	GAME_ID: 150000015,
 	MOVE_DELAY: 150/10, //~20 ticks every three seconds
 	accumulator: 0,
 	BALL_DELAY: 100,
 	ballAccumulator: 0,
-	keyData: [[false, false],
-				[false, false]],
+	keyData: [], //MULT -> add this
 	STARTING_KEY_DATA: [false, false],
 	PADDLE_WIDTH: 5,
 	HORIZONTAL_PADDING: 7, //7 spaces from each side results in a 18x32 play area.
-	p1Paddle: {
-		id: 1,
-		x_pos: 350,
-		y_pos: 300,
-		dir_pos: 0,
-		turn_speed: 7 * Math.PI/180,
-		move_speed: 7,
-		shoot_delay: 0,
-		health: 0 //Functioning as "hits"
-	},
-	p2Paddle: {
-		id: 2,
-		x_pos: 650,
-		y_pos: 700,
-		dir_pos: 0,
-		turn_speed: 7 * Math.PI/180,
-		move_speed: 7,
-		shoot_delay: 0,
-		health: 0
-	},
+	SPAWN_PADDING: 0.2,
 	paddles: [],
+	getNextTeam: function() {
+		evenAdvantage = 0;
+		for (var padObj of this.paddles) {
+			evenAdvantage += (padObj.id % 2 ? 1 : -1);
+		}
+		return (evenAdvantage > 0 ? 0 : 1);
+	},
+	Paddle: function(upperThis) { //Padding Defaults
+		this.id = (upperThis.paddles.length > 0 ? upperThis.paddles[upperThis.paddles.length - 1] + 1 + upperThis.getNextTeam() : 1);
+		var isOdd = this.id % 2;
+		this.x_pos = isOdd ? 650 : 350;
+		this.y_pos = upperThis.SPAWN_PADDING + DISPLAY_SIZE[1] * Math.random() * (1 - 2 * upperThis.SPAWN_PADDING);
+		this.dir_pos = isOdd ? Math.PI : 0;
+		this.turn_speed = 7 * Math.PI/180;
+		this.move_speed = 7;
+		this.shoot_delay = 0;
+		this.health = 0; //Functioning as "hits"
+	},
 	bulletList: [],
 	bulletSpeed: 18,
 	bulletFrequency: 7, //Amount of delay
@@ -463,16 +463,18 @@ exports.winterGame = () => ({
 	draw: function() {
 		var canvas = draw_getFilledCanvas(0);
 		canvas[0] = this.GAME_ID;
-		canvas[1] = [this.p1Paddle.x_pos, this.p1Paddle.y_pos, this.p1Paddle.dir_pos, this.p1Paddle.health];
-		canvas[2] = [this.p2Paddle.x_pos, this.p2Paddle.y_pos, this.p2Paddle.dir_pos, this.p2Paddle.health];
+		canvas[1] = [];
+		for (var padObj of this.paddles) {
+				canvas[1].push([padObj.x_pos, padObj.y_pos, padObj.dir_pos, padObj.health]);
+		}
 		canvas[3] = this.bulletList.map((bullet) => [bullet.x, bullet.y]);
 		
 		return canvas;
 	},
 	movePaddles: function() {
-		for (var playerNumber = 1; playerNumber <= this.maxPlayers; playerNumber++) {
-			var paddle = (playerNumber == 1 ? this.p1Paddle : (playerNumber == 2 ? this.p2Paddle : null));
-			if (this.keyData[playerNumber - 1][0]) {
+		for (var playerNumber = 0; playerNumber < this.paddles.length; playerNumber++) {
+			var paddle = this.paddles[playerNumber];
+			if (this.keyData[playerNumber][0]) {
 				paddle.dir_pos += paddle.turn_speed;
 			}
 			else {
@@ -482,7 +484,7 @@ exports.winterGame = () => ({
 			paddle.y_pos += paddle.move_speed * Math.sin(paddle.dir_pos);
 			
 			if (paddle.shoot_delay > 0) paddle.shoot_delay -= 1;
-			if (this.keyData[playerNumber - 1][1]) {
+			if (this.keyData[playerNumber][1]) {
 				if (paddle.shoot_delay == 0) {
 					this.bulletList.push(new this.Bullet(paddle.x_pos, paddle.y_pos, paddle.dir_pos, this.bulletSpeed, paddle.id));
 					paddle.shoot_delay = this.bulletFrequency;
@@ -498,8 +500,8 @@ exports.winterGame = () => ({
 		return Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2);
 	},
 	checkCollisions: function() {
-		for (var pId = 1; pId <= 2; pId++) {
-			var pObj = this.paddles[pId - 1];
+		for (var pNum = 0; pNum < this.paddles.length; pNum++) {
+			var pObj = this.paddles[pNum];
 			for (const bObj of this.bulletList) {
 				if (pObj.id != bObj.ownerId) {
 					if (this.calcDistSquared(pObj.x_pos, pObj.y_pos, bObj.x, bObj.y) < bObj.hitRadiusSquared) {
@@ -543,13 +545,15 @@ exports.winterGame = () => ({
 		if (this.ball.y_offset > (32 - 1)) this.ball.y_offset  = 32 - 1;
 	},
 	onPlayerConnect: function() {
-		this.paddles = [this.p1Paddle, this.p2Paddle]; //Change to dynamically update active paddles
+		this.paddles.push(new this.Paddle(this));
+		this.keyData.push(this.STARTING_KEY_DATA.slice());
 	},
 	onPlayerDisconnect: function(playerNumber) {
-		this.keyData[playerNumber - 1] = this.STARTING_KEY_DATA.slice();
+		this.paddles.splice(playerNumber - 1, 1);
+		this.keyData.splice(playerNumber - 1, 1);
 	},
 	minPlayers: 1,
-	maxPlayers: 2
+	maxPlayers: 200
 });
 
 //Platformer, Chess, Checkers, Climbing-style Game
